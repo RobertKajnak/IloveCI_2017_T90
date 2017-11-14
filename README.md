@@ -8,6 +8,10 @@ rm -r .git
 rm readme.md  
 rm .gitignore  
 
+[config git]  
+git config --global user.email "[username]"
+[if you want password remembered]
+git config credential.helper store
 
 git init  
 git pull https://github.com/RobertKajnak/IloveCI_2017_T90.git   

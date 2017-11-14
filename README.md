@@ -4,7 +4,7 @@ Neural Network stuff for team 90
 
 go to the folder (torcs-client)  
 [remove the old git stuff]  
-rm -r .git  
+rm -r -f .git  
 rm readme.md  
 rm .gitignore  
 

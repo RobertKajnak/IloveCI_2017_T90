@@ -36,3 +36,4 @@ print(y_true, y_pred, err)
 
 
 joblib.dump(my_esn, 'ESN0.pkl') 
+joblib.dump(regr, 'regr.pkl') 

@@ -110,3 +110,5 @@ pytocl/
 test/
 *.csv
 requirements.txt
+*.pkl
+LICENCE

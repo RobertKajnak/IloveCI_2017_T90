@@ -112,3 +112,5 @@ test/
 requirements.txt
 *.pkl
 LICENCE
+run.py
+start.sh

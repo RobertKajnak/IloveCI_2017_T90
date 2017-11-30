@@ -7,15 +7,18 @@ import os
 import neat
 from numpy import loadtxt, atleast_2d
 import numpy as np
+from sklearn.externals import joblib
+import subprocess
+import csv
 #import visualize
 
 # 2-input XOR inputs and expected outputs.
 #xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
 #xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
 
-X1 = loadtxt('aalborg.csv',  delimiter=",", skiprows=1)
-T = loadtxt('alpine-1.csv', delimiter=",", skiprows=1)
-X2 = loadtxt('f-speedway.csv', delimiter=",", skiprows=1)
+X1 = loadtxt('torcs-client/aalborg.csv',  delimiter=",", skiprows=1)
+T = loadtxt('torcs-client/alpine-1.csv', delimiter=",", skiprows=1)
+X2 = loadtxt('torcs-client/f-speedway.csv', delimiter=",", skiprows=1)
 data = np.concatenate((X1, X2, T))
 
 
@@ -25,12 +28,31 @@ xor_outputs = data[:, :3]
 
 
 def eval_genomes(genomes, config):
+
     for genome_id, genome in genomes:
-        genome.fitness = 4.0
+        # for now: assume only 10 drivers
+        i = genome_id - 1
+        filename = "torcs-client/genomes/genome" + str(i) + "/genome.pkl"
         net = neat.nn.FeedForwardNetwork.create(genome, config)
-        for xi, xo in zip(xor_inputs, xor_outputs):
-            output = net.activate(xi)
-            genome.fitness -= (output[0] - xo[0]) ** 2
+        joblib.dump(net, filename) 
+        genome.fitness = 1300
+
+    subprocess.check_output(["python3", "torcs_tournament.py", "quickrace.yml"])
+    with open("ratings.csv") as ratingfile:
+        reader = csv.reader(ratingfile, delimiter=',')
+        ratings = list(reader)
+        for genome_id, genome in genomes:
+            for rating in ratings:
+                if rating[0] == "student" + str(genome_id):
+                    fitness = rating[1]
+            print(fitness)
+            genome.fitness = float(fitness)
+
+#        genome.fitness = 4.0
+#        net = neat.nn.FeedForwardNetwork.create(genome, config)
+#        for xi, xo in zip(xor_inputs, xor_outputs):
+#            output = net.activate(xi)
+#            genome.fitness -= (output[0] - xo[0]) ** 2
 
 
 def run(config_file):
@@ -55,19 +77,19 @@ def run(config_file):
     print('\nBest genome:\n{!s}'.format(winner))
 
     # Show output of the most fit genome against training data.
-    print('\nOutput:')
-    winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
-    for xi, xo in zip(xor_inputs, xor_outputs):
-        output = winner_net.activate(xi)
-        print("input {!r}, expected output {!r}, got {!r}".format(xi, xo, output))
+#    print('\nOutput:')
+#    winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
+#    for xi, xo in zip(xor_inputs, xor_outputs):
+#        output = winner_net.activate(xi)
+#        print("input {!r}, expected output {!r}, got {!r}".format(xi, xo, output))
 
     node_names = {-1:'A', -2: 'B', 0:'A XOR B'}
 #    visualize.draw_net(config, winner, True, node_names=node_names)
 #    visualize.plot_stats(stats, ylog=False, view=True)
 #    visualize.plot_species(stats, view=True)
 
-    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
-    p.run(eval_genomes, 10)
+#    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
+#    p.run(eval_genomes, 10)
 
 
 if __name__ == '__main__':

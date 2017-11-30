@@ -16,37 +16,41 @@ import csv
 #xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
 #xor_outputs = [   (0.0,),     (1.0,),     (1.0,),     (0.0,)]
 
-X1 = loadtxt('torcs-client/aalborg.csv',  delimiter=",", skiprows=1)
-T = loadtxt('torcs-client/alpine-1.csv', delimiter=",", skiprows=1)
-X2 = loadtxt('torcs-client/f-speedway.csv', delimiter=",", skiprows=1)
-data = np.concatenate((X1, X2, T))
+#X1 = loadtxt('torcs-client/aalborg.csv',  delimiter=",", skiprows=1)
+#T = loadtxt('torcs-client/alpine-1.csv', delimiter=",", skiprows=1)
+#X2 = loadtxt('torcs-client/f-speedway.csv', delimiter=",", skiprows=1)
+#data = np.concatenate((X1, X2, T))
 
 
 
-xor_inputs = data[:, 3:] 
-xor_outputs = data[:, :3]
+#xor_inputs = data[:, 3:] 
+#xor_outputs = data[:, :3]
 
 
 def eval_genomes(genomes, config):
-
+    i = 0
+    genome_dict = {}
     for genome_id, genome in genomes:
+        print(genome_id)
         # for now: assume only 10 drivers
-        i = genome_id - 1
+        genome_dict[genome_id] = i 
         filename = "torcs-client/genomes/genome" + str(i) + "/genome.pkl"
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         joblib.dump(net, filename) 
         genome.fitness = 1300
+        i += 1
 
     subprocess.check_output(["python3", "torcs_tournament.py", "quickrace.yml"])
     with open("ratings.csv") as ratingfile:
         reader = csv.reader(ratingfile, delimiter=',')
         ratings = list(reader)
         for genome_id, genome in genomes:
+            i = genome_dict[genome_id]
             for rating in ratings:
-                if rating[0] == "student" + str(genome_id):
+                if rating[0] == "student" + str(i):
                     fitness = rating[1]
             print(fitness)
-            genome.fitness = float(fitness)
+            genome.fitness -= float(fitness)
 
 #        genome.fitness = 4.0
 #        net = neat.nn.FeedForwardNetwork.create(genome, config)

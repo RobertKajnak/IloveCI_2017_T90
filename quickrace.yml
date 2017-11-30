@@ -1,0 +1,25 @@
+players:
+    student0:
+      working_dir: /home/student/Documents/torcs-server/torcs-client/genomes/genome0
+    student1:
+        working_dir: /home/student/Documents/torcs-server/torcs-client/genomes/genome1
+    student2:
+        working_dir: /home/student/Documents/torcs-server/torcs-client/genomes/genome2
+    student3:
+        working_dir: /home/student/Documents/torcs-server/torcs-client/genomes/genome3
+    student4:
+        working_dir: /home/student/Documents/torcs-server/torcs-client/genomes/genome4
+    student5:
+        working_dir: /home/student/Documents/torcs-server/torcs-client/genomes/genome5
+    student6:
+        working_dir: /home/student/Documents/torcs-server/torcs-client/genomes/genome6
+    student7:
+        working_dir: /home/student/Documents/torcs-server/torcs-client/genomes/genome7
+    student8:
+        working_dir: /home/student/Documents/torcs-server/torcs-client/genomes/genome8
+    student9:
+        working_dir: /home/student/Documents/torcs-server/torcs-client/genomes/genome9
+controller:
+  torcs_config_file: quickrace.xml
+rater:
+  filename: ./ratings.csv

@@ -62,7 +62,7 @@ def eval_genomes(genomes, config):
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         for xi, xo in zip(xor_inputs, xor_outputs):
             output = net.activate(xi)
-            genome.fitness = 1 - mean_squared_error(output, xo)
+            genome.fitness += 1 - mean_squared_error(output, xo)
            # genome.fitness -= (output[0] - xo[0]) ** 2
             
 # err = mean_squared_error(y_true, y_pred)
@@ -84,7 +84,7 @@ def run(config_file):
     p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(eval_genomes, 100)
+    winner = p.run(eval_genomes, 10)
     joblib.dump(winner, 'winner.pkl') 
 
     # Display the winning genome.
@@ -118,32 +118,3 @@ if __name__ == '__main__':
 
 
 
-def plot_stats(statistics, ylog=False, view=False, filename='avg_fitness.svg'):
-    """ Plots the population's average and best fitness. """
-    if plt is None:
-        warnings.warn("This display is not available due to a missing optional dependency (matplotlib)")
-        return
-
-    generation = range(len(statistics.most_fit_genomes))
-    best_fitness = [c.fitness for c in statistics.most_fit_genomes]
-    avg_fitness = np.array(statistics.get_fitness_mean())
-    stdev_fitness = np.array(statistics.get_fitness_stdev())
-
-    plt.plot(generation, avg_fitness, 'b-', label="average")
-    plt.plot(generation, avg_fitness - stdev_fitness, 'g-.', label="-1 sd")
-    plt.plot(generation, avg_fitness + stdev_fitness, 'g-.', label="+1 sd")
-    plt.plot(generation, best_fitness, 'r-', label="best")
-
-    plt.title("Population's average and best fitness")
-    plt.xlabel("Generations")
-    plt.ylabel("Fitness")
-    plt.grid()
-    plt.legend(loc="best")
-    if ylog:
-        plt.gca().set_yscale('symlog')
-
-    plt.savefig(filename)
-    if view:
-        plt.show()
-
-    plt.close()

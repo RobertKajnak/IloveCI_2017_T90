@@ -7,6 +7,7 @@ import math
 from sklearn.externals import joblib
 import numpy as np
 import time
+import csv
 
 class Timer:
     ctime=0;
@@ -48,12 +49,12 @@ class MyDriver(Driver):
         command = Command()
         
         input = [carstate.speed_x, carstate.distance_from_center, carstate.angle] \
-        + list(carstate.distances_from_edge)
+        + list(carstate.distances_from_edge) + list(carstate.opponents)
         
         d_input = np.atleast_2d(input)
 
         output = genome.activate(input)
-
+       
         if output[0] > 1:
             accelerate = 1
         elif output[0] < 0:
@@ -83,6 +84,9 @@ class MyDriver(Driver):
         if not command.gear:
             command.gear = carstate.gear or 1
         
-        print(command.gear)   
+        # Save output
+        with open('fitness_parameter.csv', 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow([carstate.distance_raced, carstate.current_lap_time, carstate.race_position])
         return command
 

@@ -3,7 +3,7 @@
 [NEAT]
 fitness_criterion     = mean
 fitness_threshold     = 24021
-pop_size              = 5
+pop_size              = 10
 reset_on_extinction   = False
 
 [DefaultGenome]
@@ -46,7 +46,7 @@ node_add_prob           = 0.2
 node_delete_prob        = 0.2
 
 # network parameters
-num_hidden              = 0
+num_hidden              = 5
 num_inputs              = 22
 num_outputs             = 3
 

@@ -63,7 +63,7 @@ def eval_genomes(genomes, config):
         for xi, xo in zip(xor_inputs, xor_outputs):
             output = net.activate(xi)
             genome.fitness += 1 - mean_squared_error(output, xo)
-           # genome.fitness -= (output[0] - xo[0]) ** 2
+          # genome.fitness -= (output[0] - xo[0]) ** 2
             
 # err = mean_squared_error(y_true, y_pred)
 
@@ -76,7 +76,7 @@ def run(config_file):
 
     # Create the population, which is the top-level object for a NEAT run.
     p = neat.Population(config)
-
+    
     # Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
@@ -84,7 +84,7 @@ def run(config_file):
     p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    winner = p.run(eval_genomes, 10)
+    winner = p.run(eval_genomes, 300)
     joblib.dump(winner, 'winner.pkl') 
 
     # Display the winning genome.

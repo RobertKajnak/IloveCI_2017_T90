@@ -23,19 +23,21 @@ class Driver:
     def __init__(self, logdata=True):
             
         self.steering_ctrl = CompositeController(
-            ProportionalController(0.4),
+            ProportionalController(0.8),
             IntegrationController(0.2, integral_limit=1.5),
             DerivativeController(2)
         )
 
-        self.steerers = [CompositeController(ProportionalController(0.4*i),
-            IntegrationController(0.2*i, integral_limit=1.5),
-            DerivativeController(2/i)) for i in range(1,5)]
+        self.steerers = [CompositeController(ProportionalController(0.4),
+            IntegrationController(0.2, integral_limit=1.5),
+            DerivativeController(2)) for i in range(1,5)]
         
         self.acceleration_ctrl = CompositeController(
             ProportionalController(3.7),
         )
         self.data_logger = DataLogWriter() if logdata else None
+        
+        self.is_frontal=False
 
     @property
     def range_finder_angles(self):
@@ -92,19 +94,32 @@ class Driver:
         drivers) successfully driven along the race track.
         """
         command = Command()
-        self.steer(carstate, 0.0, command)
 
-        # ACC_LATERAL_MAX = 6400 * 5
-        # v_x = min(80, math.sqrt(ACC_LATERAL_MAX / abs(command.steering)))
-        #v_x = 300
-        v_x = self.speed_by_dist(carstate.distances_from_edge[9])
-
-        #print(carstate.distances_from_edge[9],v_x)
-
+        d_front = carstate.distances_from_edge[9]        
+        
+        self.steer(carstate, 0.0, command)       
+           
+        v_x = self.speed_by_dist(d_front)
         self.accelerate(carstate, v_x, command)
+        
+        #I.e. frontal collision with wall
+        if carstate.speed_x<2 and carstate.speed_x>0 and d_front<2:
+            print("Frontal detected")
+            self.is_frontal = True
+            self.frontal_start = carstate.current_lap_time
 
+        #print(carstate.distance_from_center,carstate.distances_from_edge[9])
         if self.data_logger:
             self.data_logger.log(carstate, command)
+
+        if self.is_frontal:
+            command.accelerator = 0.7
+            command.steering = 0
+            command.gear = -1
+            if carstate.current_lap_time - self.frontal_start>1.5:
+                self.is_frontal = False
+                command.gear = 1
+                print("stopping frontal")
 
         return command
 
@@ -146,10 +161,11 @@ class Driver:
             carstate.current_lap_time
         )
         
-        '''for steerer in self.steerers:
-            steerer.control(steering_error,carstate.current_lap_time)
-        command.steering = self.steerers[self.speed_category(carstate.speed_x)].\
-                control(steering_error,carstate.current_lap_time)'''
+        '''commands = []
+        for steerer in self.steerers:
+            commands.append(steerer.control(steering_error,carstate.current_lap_time))
+        
+        command.steering = commands[self.speed_category(carstate.speed_x)]'''
         
     def complex_control(self, carstate, command):
         

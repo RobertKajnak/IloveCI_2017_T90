@@ -103,8 +103,9 @@ class Driver:
         self.accelerate(carstate, v_x, command)
         
         #I.e. frontal collision with wall
+        #the (not self.is_frontal) is omitted on purpose -- the timer starst after
+        #starting to go backwards
         if carstate.speed_x<2 and carstate.speed_x>0 and d_front<2:
-            print("Frontal detected")
             self.is_frontal = True
             self.frontal_start = carstate.current_lap_time
 
@@ -116,10 +117,9 @@ class Driver:
             command.accelerator = 0.7
             command.steering = 0
             command.gear = -1
-            if carstate.current_lap_time - self.frontal_start>1.5:
+            if carstate.current_lap_time - self.frontal_start>1.5 or abs(carstate.distance_from_center)<0.5:
                 self.is_frontal = False
                 command.gear = 1
-                print("stopping frontal")
 
         return command
 

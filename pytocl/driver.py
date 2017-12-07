@@ -34,8 +34,8 @@ class Driver:
             DerivativeController(2)),
 
             CompositeController(ProportionalController(0.8),
-            IntegrationController(0.15, integral_limit=1.3),
-            DerivativeController(1)),
+            IntegrationController(0.5, integral_limit=1.3),
+            DerivativeController(2)),
             
             CompositeController(
             ProportionalController(0.4),
@@ -119,7 +119,7 @@ class Driver:
             self.frontal_start = carstate.current_lap_time
 
         #print(carstate.distance_from_center,carstate.distances_from_edge[9])
-        print(carstate.distance_from_center)
+        #print(carstate.distance_from_center)
         if self.data_logger:
             self.data_logger.log(carstate, command)
 

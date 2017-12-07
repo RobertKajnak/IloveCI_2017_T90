@@ -61,17 +61,13 @@ class Driver:
 
     def speed_by_dist(self,d):
         if d>=150:
-            y=300
-        elif d>100:
-            y=120
-        elif d>60:
-            y=150
+            y=400
         elif d>30:
-            y=100
-        elif d>10:
-            y=40
+            y=100+2.5*(d-30)
+        elif d>20:
+            y=105
         else:
-            y=20
+            y=55    
         
         return y
         
@@ -103,7 +99,7 @@ class Driver:
         #v_x = 300
         v_x = self.speed_by_dist(carstate.distances_from_edge[9])
 
-        print(carstate.distances_from_edge[9],v_x)
+        #print(carstate.distances_from_edge[9],v_x)
 
         self.accelerate(carstate, v_x, command)
 

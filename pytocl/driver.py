@@ -28,16 +28,26 @@ class Driver:
             DerivativeController(2)
         )
 
-        self.steerers = [CompositeController(ProportionalController(0.4),
-            IntegrationController(0.2, integral_limit=1.5),
-            DerivativeController(2)) for i in range(1,5)]
+        self.steerers = [CompositeController(
+            ProportionalController(2),
+            IntegrationController(0.1, integral_limit=0.5),
+            DerivativeController(2)),
+
+            CompositeController(ProportionalController(0.8),
+            IntegrationController(0.15, integral_limit=1.3),
+            DerivativeController(1)),
+            
+            CompositeController(
+            ProportionalController(0.4),
+            IntegrationController(0.05, integral_limit=1.5),
+            DerivativeController(0.5))]
         
         self.acceleration_ctrl = CompositeController(
             ProportionalController(3.7),
         )
         self.data_logger = DataLogWriter() if logdata else None
         
-        self.is_frontal=False
+        self.is_frontal=0
 
     @property
     def range_finder_angles(self):
@@ -75,14 +85,12 @@ class Driver:
         
     def speed_category(self,v):
         cat = 0        
-        if v<40:
+        if v<20:
             cat = 0
-        elif v<100:
+        elif v<130:
             cat=1
-        elif v<200:
-            cat = 2
         else:
-            cat = 3
+            cat = 2
         return cat
     
     def drive(self, carstate: State) -> Command:
@@ -95,7 +103,8 @@ class Driver:
         """
         command = Command()
 
-        d_front = carstate.distances_from_edge[9]        
+        d_front = carstate.distances_from_edge[9]      
+        d_center = carstate.distance_from_center
         
         self.steer(carstate, 0.0, command)       
            
@@ -104,20 +113,21 @@ class Driver:
         
         #I.e. frontal collision with wall
         #the (not self.is_frontal) is omitted on purpose -- the timer starst after
-        #starting to go backwards
+        #starting to go backwars
         if carstate.speed_x<2 and carstate.speed_x>0 and d_front<2:
-            self.is_frontal = True
+            self.is_frontal = -1 if d_center<0 else 1
             self.frontal_start = carstate.current_lap_time
 
         #print(carstate.distance_from_center,carstate.distances_from_edge[9])
+        print(carstate.distance_from_center)
         if self.data_logger:
             self.data_logger.log(carstate, command)
 
-        if self.is_frontal:
+        if self.is_frontal!=0:
             command.accelerator = 0.7
-            command.steering = 0
+            command.steering = self.is_frontal
             command.gear = -1
-            if carstate.current_lap_time - self.frontal_start>1.5 or abs(carstate.distance_from_center)<0.5:
+            if carstate.current_lap_time - self.frontal_start>.95:
                 self.is_frontal = False
                 command.gear = 1
 
@@ -148,7 +158,7 @@ class Driver:
         else:
             command.brake = min(-acceleration, 1)
 
-        if carstate.rpm < 2500:
+        if carstate.rpm < 2500 and carstate.speed_x>0:
             command.gear = carstate.gear - 1
 
         if not command.gear:
@@ -156,16 +166,16 @@ class Driver:
 
     def steer(self, carstate, target_track_pos, command):
         steering_error = target_track_pos - carstate.distance_from_center
-        command.steering = self.steering_ctrl.control(
+        '''command.steering = self.steering_ctrl.control(
             steering_error,
             carstate.current_lap_time
-        )
+        )'''
         
-        '''commands = []
+        commands = []
         for steerer in self.steerers:
             commands.append(steerer.control(steering_error,carstate.current_lap_time))
         
-        command.steering = commands[self.speed_category(carstate.speed_x)]'''
+        command.steering = commands[self.speed_category(carstate.speed_x*3.6)]
         
     def complex_control(self, carstate, command):
         

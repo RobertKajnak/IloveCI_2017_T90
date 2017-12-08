@@ -99,16 +99,22 @@ class MyDriver(Driver):
         #! NEEDS TO GO AFTER GEARCHANGE!
         d_front = carstate.distances_from_edge[9]      
         d_center = carstate.distance_from_center
+        #print(carstate.current_lap_time - self.frontal_start)
         if carstate.speed_x<2 and carstate.speed_x>0 and d_front<2 and \
-                carstate.current_lap_time - self.frontal_start >5:
+                carstate.current_lap_time - self.frontal_start >3:
             self.is_frontal = -1 if d_center<0 else 1
             self.frontal_start = carstate.current_lap_time
+            self.frontal_dist = abs(d_center)*1.3
 
         if self.is_frontal!=0:
+            print("Reversing" + str(self.frontal_dist))
             command.accelerator = 0.7
-            command.steering = self.is_frontal
-            command.gear = -1
-            if carstate.current_lap_time - self.frontal_start>1.3:
+            command.steering = self.is_frontal 
+            if self.frontal_dist>3:
+                command.steering *= 0.5
+            
+            command.gear = -1   
+            if carstate.current_lap_time - self.frontal_start > self.frontal_dist:
                 self.is_frontal = False
                 command.gear = 1
                 

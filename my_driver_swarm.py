@@ -41,26 +41,28 @@ class MyDriver(Driver):
         self.last_angle = 2000
 
         
-        # pick idenity
+        # pick idenity and ensure that all files exist
         try: 
-            with open('position.csv', 'r+') as csvfile: 
+            with open('position_team90.csv', 'r+') as csvfile: 
                 reader = csv.reader(csvfile)
                 row = next(reader)
                 if 'a' in row:
                     self.identity = 'b'
-                    with open('position.csv', 'w') as csvfile:
+                    with open('position_team90.csv', 'w') as csvfile:
                         writer = csv.writer(csvfile, delimiter=',')
-                        writer.writerow('b') 
+                        writer.writerow('b')
                 else:
                     self.identity = 'a'
-                    with open('position.csv', 'w') as csvfile:
+                    with open('position_team90.csv', 'w') as csvfile:
                         writer = csv.writer(csvfile, delimiter=',')
-                        writer.writerow('a')      
-        except StopIteration:
+                        writer.writerow('a')   
+        except OSError:
             self.identity = 'a'
-            with open('position.csv', 'w') as csvfile:
+            with open('position_team90.csv', 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow('a')  
+                writer.writerow('a') 
+        open('positiona_team90.csv', 'w')
+        open('positionb_team90.csv', 'w')
         #crash detection
         self.is_frontal=0
         self.frontal_start = 0
@@ -136,11 +138,11 @@ class MyDriver(Driver):
 
         # Get files to read and write
         if self.identity == 'a':
-            this_file = 'positiona.csv'
-            other_file = 'positionb.csv'
+            this_file = 'positiona_team90.csv'
+            other_file = 'positionb_team90.csv'
         else:
-            this_file = 'positionb.csv'
-            other_file = 'positiona.csv'
+            this_file = 'positionb_team90.csv'
+            other_file = 'positiona_team90.csv'
 
         # Different behavior if behind
         behind = False

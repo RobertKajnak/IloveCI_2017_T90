@@ -31,6 +31,16 @@ class MyDriver(Driver):
         self.is_frontal=0
         self.frontal_start = 0
         self.frontal_dist =0
+
+        self.last_gear = 0 
+        self.last_shift_time = -5
+
+    #Prevents shifting oscillation        
+    #up_down = gear shift amount: positive for up, negative for down
+    def is_safe_shift(self,carstate,attempted_gear,time_limit=1.5):
+        return not ((self.last_gear == attempted_gear) and \
+                (carstate.current_lap_time-time_limit-self.last_shit_time>0))
+        
     def drive(self,carstate: State) -> Command:
         command = Command()
         
@@ -83,9 +93,9 @@ class MyDriver(Driver):
         command.steering = steer
           
      
-        if carstate.rpm > 8000:
+        if carstate.rpm > 8000 and self.is_safe_shift(carstate,carstate.gear+1):
             command.gear = carstate.gear + 1
-        if carstate.rpm < 2500 and carstate.gear > 0:
+        if carstate.rpm < 2500 and carstate.gear > 0 and self.is_safe_shift(carstate,carstate.gear-1):
             command.gear = carstate.gear - 1
                 
 

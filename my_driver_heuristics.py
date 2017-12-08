@@ -9,21 +9,6 @@ import numpy as np
 import time
 from collections import deque
 
-class Timer:
-    ctime=0;
-    name = ''
-    def __init__(self,name=''):
-        self.name = name
-        self.ctime = time.time()
-        
-    def reset(self):   
-        self.ctime = time.time()        
-        
-    def clock(self):
-        newtime = time.time()
-        print('%s took %f ms' %(self.name,(newtime-self.ctime)*1000))
-        # self.ctime = newtime
-
 with open('ESN0.pkl', 'rb') as ESN_pickle:
     my_esn = joblib.load(ESN_pickle)
 
@@ -37,20 +22,18 @@ class MyDriver(Driver):
     # Override the `drive` method to create your own driver
     my_esn = None;
     regr=None;
-    transTimer = Timer('Transform')
-    regrTimer = Timer('regr')
     
     def __init__(self):
-        t = Timer();
         with open('mlp.pkl', 'rb') as ESN_pickle:
             self.my_esn = joblib.load(ESN_pickle)
 
         with open('regr.pkl', 'rb') as regr_pickle:
             self.regr = joblib.load(regr_pickle)
         self.last_angle = 2000
-        t.clock()
-
         
+        #crash detection
+        self.is_frontal=0
+        self.frontal_start = 0
     def drive(self,carstate: State) -> Command:
         command = Command()
         
@@ -96,17 +79,14 @@ class MyDriver(Driver):
             
         if abs(steer) > 0.05 and carstate.speed_x > 20:
             brake = 1
-            print('full braking')
+            #print('full braking')
 
         command.accelerator = accelerate
         command.brake = brake
         command.steering = steer
-        #print(accelerate, brake, steer)
-        #command.accelerator or acceleration?
-        
-        #command.accelerator = 1
+          
      
-        if carstate.rpm > 4000:
+        if carstate.rpm > 8000:
             command.gear = carstate.gear + 1
         if carstate.rpm < 2500 and carstate.gear > 0:
             command.gear = carstate.gear - 1
@@ -114,8 +94,25 @@ class MyDriver(Driver):
 
         if not command.gear:
             command.gear = carstate.gear or 1
-        
+
+        #frontal crash detected
+        #! NEEDS TO GO AFTER GEARCHANGE!
+        d_front = carstate.distances_from_edge[9]      
+        d_center = carstate.distance_from_center
+        if carstate.speed_x<2 and carstate.speed_x>0 and d_front<2 and \
+                carstate.current_lap_time - self.frontal_start >5:
+            self.is_frontal = -1 if d_center<0 else 1
+            self.frontal_start = carstate.current_lap_time
+
+        if self.is_frontal!=0:
+            command.accelerator = 0.7
+            command.steering = self.is_frontal
+            command.gear = -1
+            if carstate.current_lap_time - self.frontal_start>1.3:
+                self.is_frontal = False
+                command.gear = 1
+                
        
-        print(accelerate, brake, steer, carstate.angle)
+        #print(accelerate, brake, steer, carstate.angle)
              
         return command

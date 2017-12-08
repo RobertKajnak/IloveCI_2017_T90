@@ -37,7 +37,6 @@ class MyDriver(Driver):
     regrTimer = Timer('regr')
     
     def __init__(self):
-        t = Timer();
 
         self.last_angle = 2000
 
@@ -66,8 +65,14 @@ class MyDriver(Driver):
         self.is_frontal=0
         self.frontal_start = 0
         self.frontal_dist =0
+        self.last_gear = 0 
+        self.last_shift_time = -5
 
-        t.clock()
+    #Prevents shifting oscillation        
+    #up_down = gear shift amount: positive for up, negative for down
+    def is_safe_shift(self,carstate,attempted_gear,time_limit=1.5):
+        return not ((self.last_gear == attempted_gear) and \
+                (carstate.current_lap_time-time_limit-self.last_shift_time>0))
 
         
     def drive(self,carstate: State) -> Command:
@@ -120,6 +125,7 @@ class MyDriver(Driver):
         if abs(steer) > 0.05 and carstate.speed_x > 20:
             brake = 1
             #print('full braking')
+
         d_front = carstate.distances_from_edge[9]      
         d_center = carstate.distance_from_center
         if carstate.speed_x<2 and carstate.speed_x>0 and d_front<2 and \
@@ -174,14 +180,13 @@ class MyDriver(Driver):
         
         #command.accelerator = 1
      
-        if carstate.rpm > 4000:
+        if carstate.rpm > 8000 and self.is_safe_shift(carstate,carstate.gear+1):
+            print('gear up')
             command.gear = carstate.gear + 1
-        if carstate.rpm < 2500 and carstate.gear > 1:
+        if carstate.rpm < 2500 and carstate.gear > 0 and self.is_safe_shift(carstate,carstate.gear-1):
+            print('gear down')
             command.gear = carstate.gear - 1
-                
-
-        if not command.gear:
-            command.gear = carstate.gear or 1
+               
 
         with open(this_file, 'w') as csvfile: 
             writer = csv.writer(csvfile, delimiter=',')
@@ -208,8 +213,14 @@ class MyDriver(Driver):
             command.gear = -1   
             if carstate.current_lap_time - self.frontal_start > self.frontal_dist:
                 print('changed gear to one')
-                self.is_frontal = False
+                self.is_frontal = 0
                 command.gear = 1
+
+        if not command.gear:
+            print('keep gear same')
+            command.gear = carstate.gear or 1
+        if self.is_frontal == 0 and command.gear == -1:
+            command.gear = 1
         print(command.accelerator, command.brake, command.steering, command.gear)
 
         return command

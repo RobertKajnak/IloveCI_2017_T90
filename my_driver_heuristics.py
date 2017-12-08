@@ -24,16 +24,13 @@ class MyDriver(Driver):
     regr=None;
     
     def __init__(self):
-        with open('mlp.pkl', 'rb') as ESN_pickle:
-            self.my_esn = joblib.load(ESN_pickle)
 
-        with open('regr.pkl', 'rb') as regr_pickle:
-            self.regr = joblib.load(regr_pickle)
         self.last_angle = 2000
         
         #crash detection
         self.is_frontal=0
         self.frontal_start = 0
+        self.frontal_dist =0
     def drive(self,carstate: State) -> Command:
         command = Command()
         
@@ -99,15 +96,15 @@ class MyDriver(Driver):
         #! NEEDS TO GO AFTER GEARCHANGE!
         d_front = carstate.distances_from_edge[9]      
         d_center = carstate.distance_from_center
-        #print(carstate.current_lap_time - self.frontal_start)
+        
         if carstate.speed_x<2 and carstate.speed_x>0 and d_front<2 and \
-                carstate.current_lap_time - self.frontal_start >3:
+                carstate.current_lap_time - self.frontal_start >self.frontal_dist*3:
             self.is_frontal = -1 if d_center<0 else 1
             self.frontal_start = carstate.current_lap_time
             self.frontal_dist = abs(d_center)*1.3
 
         if self.is_frontal!=0:
-            print("Reversing" + str(self.frontal_dist))
+            #print("Reversing" + str(self.frontal_dist))
             command.accelerator = 0.7
             command.steering = self.is_frontal 
             if self.frontal_dist>3:

@@ -22,5 +22,6 @@ obviously use the actual path, if it is different and other editors can be used 
 git init  
 git pull https://github.com/RobertKajnak/IloveCI_2017_T90.git   
 git add [filename] ( . adds all files, ignoring only some python specific chached files etc)   
-git commit -m "[description of the changes]"  
+[quick and dirty]  git commit -m "[description of the changes]"  
+[with editor]  git commit  [use two newlines to separate commit title and body]  
 git push https://github.com/RobertKajnak/IloveCI_2017_T90 master  
